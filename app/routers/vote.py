@@ -20,7 +20,7 @@ async def vote(vote: schema.Vote, db: AsyncSession = Depends(get_db),
     select_query = select(models.Post).filter(models.Post.id == vote.post_id)
     result = await db.execute(select_query)
 
-    if not await result.scalar_one_or_none():
+    if not result.scalar_one_or_none():
         raise HTTPException(status_code=404,details='Post not found')
     
     vote_query = select(models.Vote).where(models.Vote.post_id == vote.post_id,

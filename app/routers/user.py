@@ -18,11 +18,11 @@ router = APIRouter(
 
 @router.post('', status_code=201, response_model=schema.User)
 async def create_user(user: schema.UserCreate, db:AsyncSession = Depends(get_db)):
-    user.password = utlis.hash(user.password)
+    user.password = await utlis.hash(user.password)
     new_user = models.User(**user.model_dump())
     db.add(new_user)
     await db.commit()
-    db.refresh(new_user)
+    await db.refresh(new_user)
     return new_user
     
 

@@ -2,6 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from ..database import get_db, engine
 from .. import models
 from .. import schema
@@ -22,12 +23,12 @@ async def get_posts(db:AsyncSession = Depends(get_db), current_user: schema.User
     
     select_query = select(models.Post,func.count(models.Vote.post_id).label('votes')).join(models.Vote,
                                         models.Vote.post_id == models.Post.id,
-                                        isouter=True).group_by(models.Post.id).where(models.Post.title.contains(search)).limit(limit)
+                                        isouter=True).group_by(models.Post.id).options(selectinload(models.Post.user)).where(models.Post.title.contains(search)).limit(limit)
     
     posts = await db.execute(select_query)
     return posts.all()
 
-@router.post('', status_code=201, response_model= schema.Post)
+@router.post('', status_code=201)
 async def create_post(post: schema.PostCreate, db:AsyncSession = Depends(get_db),
                        current_user: schema.User = Depends(oauth2.get_current_user)):
     
@@ -37,17 +38,17 @@ async def create_post(post: schema.PostCreate, db:AsyncSession = Depends(get_db)
     await db.refresh(new_post)
     return new_post
 
-@router.get('/{id}', response_model= schema.PostPublic)
+@router.get('/{id}')
 async def get_post(id:int, db:AsyncSession = Depends(get_db),
                     current_user: schema.User = Depends(oauth2.get_current_user)):
     select_query = select(models.Post,func.count(models.Vote.post_id).label('votes')).join(models.Vote,
                                         models.Vote.post_id == models.Post.id,
-                                        isouter=True).group_by(models.Post.id).having(models.Post.id == id)
+                                        isouter=True).group_by(models.Post.id).options(selectinload(models.Post.user)).where(models.Post.id == id)
     
     result = await db.execute(select_query)
-    post = result.scalar_one_or_none()
+    post = result.all()
     if post:
-        return post
+        return {'results': post}
     raise HTTPException(status_code=404,
                         detail=f'Post with ID {id} not found')
     

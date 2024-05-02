@@ -19,7 +19,7 @@ class Post(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     user_id: Mapped[int] = mapped_column(Integer,ForeignKey(column="users.id",ondelete="cascade"),nullable=False,)
 
-    user: Mapped["User"] = relationship('User')
+    user: Mapped['User'] = relationship('User')
     
 
 class User(Base):

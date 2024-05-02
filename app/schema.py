@@ -33,7 +33,6 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     id: int
-    user_id: int
     published: bool
     created_at: datetime = Field(default_factory=datetime.now)
     user: User

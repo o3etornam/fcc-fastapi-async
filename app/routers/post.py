@@ -58,11 +58,11 @@ async def delete_post(id:int,db:AsyncSession = Depends(get_db),
                         current_user: schema.User = Depends(oauth2.get_current_user)):
     select_query = select(models.Post).where(models.Post.id == id)
     result = await db.execute(select_query)
-    post = result.scalar_one()
+    post = result.scalar_one_or_none()
 
     if post:
         if post.user_id == current_user.id:
-            await db.delete(post.scalar_one_or_none())
+            await db.delete(post)
             await db.commit()
             return Response(status_code=204)
         raise HTTPException(status_code=403, detail=f'Not authorized to perform this action')
@@ -78,7 +78,10 @@ async def update_post(id:int, post:schema.PostCreate, db:AsyncSession = Depends(
     post_query = result.scalar_one_or_none()
     if post_query:
         if post_query.user_id == current_user.id:
-            db.add(post.model_dump())
+            for k,v in post.model_dump().items():
+                setattr(post_query,k,v)
+
+            db.add(post_query)
             await db.commit()
             return post
         raise HTTPException(status_code=403, detail=f'Not authorized to perform this action')

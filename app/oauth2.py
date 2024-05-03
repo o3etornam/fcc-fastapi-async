@@ -36,7 +36,6 @@ async def verify_acces_token(token: str, credential_exception):
         id: str = str(payload.get("user_id"))
 
         if id:
-            print(id)
             return schema.TokenData(id=id)
         raise credential_exception
     except JWTError:

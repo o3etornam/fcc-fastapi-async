@@ -38,7 +38,7 @@ async def create_post(post: schema.PostCreate, db:AsyncSession = Depends(get_db)
     await db.refresh(new_post)
     return new_post
 
-@router.get('/{id}')
+@router.get('/{id}', response_model=schema.PostPublic)
 async def get_post(id:int, db:AsyncSession = Depends(get_db),
                     current_user: schema.User = Depends(oauth2.get_current_user)):
     select_query = select(models.Post,func.count(models.Vote.post_id).label('votes')).join(models.Vote,
@@ -46,9 +46,9 @@ async def get_post(id:int, db:AsyncSession = Depends(get_db),
                                         isouter=True).group_by(models.Post.id).options(selectinload(models.Post.user)).where(models.Post.id == id)
     
     result = await db.execute(select_query)
-    post = result.all()
+    post = result.first()
     if post:
-        return {'results': post}
+        return post
     raise HTTPException(status_code=404,
                         detail=f'Post with ID {id} not found')
     

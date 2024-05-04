@@ -2,9 +2,20 @@ from fastapi import FastAPI
 from . database import create_all_tables
 from . routers import post, user, auth, vote
 from contextlib import contextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @contextmanager
 async def lifespan(app: FastAPI):
